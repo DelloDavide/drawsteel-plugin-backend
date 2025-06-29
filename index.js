@@ -7,7 +7,7 @@ dotenv.config();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
-const PORT = process.env.PORT || 5174;
+const PORT = process.env.PORT || 3000;
 
 console.log("PORT:", process.env.PORT);
 console.log("URL:", process.env.SUPABASE_URL);
@@ -114,5 +114,5 @@ app.get("/abilita/:idGiocatore/:nomeAbilita", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running!`);
 });
