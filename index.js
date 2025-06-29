@@ -17,6 +17,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 // GET - Start API Message
 app.get("/", async (req, res) => {
@@ -43,9 +44,11 @@ app.get("/campagne", async (req, res) => {
 
 // GET - Tutte le categorie di abilita generiche
 app.get("/abilitaGeneriche", async (req, res) => {
-  const { data, error } = await supabase.from("Abilità_Generiche").select("Categoria", { distinct: true });
+  const { data, error } = await supabase.rpc("get_distinct_categorie");
   if (error) return res.status(500).json({ error: error.message, errorMessage: "Nessuna abilita generica trovata" });
-  res.json(data);
+
+  const uniqueCategorie = [...new Set(data.map(item => item.Categoria))];
+  res.json(uniqueCategorie);
 });
 
 // GET - Tutti i giocatori per campagna
@@ -111,6 +114,119 @@ app.get("/abilita/:idGiocatore/:nomeAbilita", async (req, res) => {
     return res.status(404).json({ error: `Nessuna info trovata per la seguente abilità: ${nomeAbilita} per il seguente giocatore: ${idGiocatore}` });
 
   res.json(data);
+});
+
+// POST - Aggiungi nuova Campagna
+app.post("/campagna", async (req, res) => {
+  const payload = req.body;
+
+  const requiredFields = [
+    "Nome"
+  ];
+
+  for (const field of requiredFields) {
+    if (payload[field] == null) {
+      return res.status(400).json({ error: `Campo mancante: ${field}` });
+    }
+  }
+
+  const { error } = await supabase
+    .from("Campagne")
+    .insert([payload]);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.status(201).json({ message: `Campagna: ${payload[Nome]}, inserita con successo` });
+});
+
+// POST - Aggiungi nuovo Giocatore
+app.post("/giocatore", async (req, res) => {
+  const payload = req.body;
+
+  const requiredFields = [
+    "Nome",
+    "Id_Campagna"
+  ];
+
+  for (const field of requiredFields) {
+    if (payload[field] == null) {
+      return res.status(400).json({ error: `Campo mancante: ${field}` });
+    }
+  }
+
+  const { error } = await supabase
+    .from("Giocatori")
+    .insert([payload]);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.status(201).json({ message: `Giocatore: ${payload[Nome]} per la campagna ${payload[Id_Campagna]}, inserito con successo` });
+});
+
+// POST - Aggiungi nuova abilità generica
+app.post("/abilitaGenerica", async (req, res) => {
+  const payload = req.body;
+
+  const requiredFields = [
+    "Nome",
+    "Categoria",
+    "Caratteristica",
+    "Distanza",
+    "Effetto",
+    "Keywords",
+    "Bersaglio",
+    "Tipo",
+    "Tier1",
+    "Tier2",
+    "Tier3"
+  ];
+
+  for (const field of requiredFields) {
+    if (!(field in payload)) {
+      return res.status(400).json({ error: `Campo mancante: ${field}` });
+    }
+  }
+
+  const { error } = await supabase
+    .from("Abilità_Generiche")
+    .insert([payload]);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.status(201).json({ message: `Abilità Generica: ${payload[Nome]} della categoria: ${payload[Categoria]}, inserita con successo` });
+});
+
+// POST - Aggiungi nuova abilità specifica
+app.post("/abilitaSpecifica", async (req, res) => {
+  const payload = req.body;
+
+  const requiredFields = [
+    "Nome",
+    "Id_Giocatore",
+    "Caratteristica",
+    "Distanza",
+    "Effetto",
+    "Keywords",
+    "Bersaglio",
+    "Tipo",
+    "Tier1",
+    "Tier2",
+    "Tier3"
+  ];
+
+  for (const field of requiredFields) {
+    if (!(field in payload)) {
+      return res.status(400).json({ error: `Campo mancante: ${field}` });
+    }
+  }
+
+  const { error } = await supabase
+    .from("Abilità_Specifiche")
+    .insert([payload]);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.status(201).json({ message: `Abilità Specifica per id Giocatore: ${payload[Id_Giocatore]} e nome: ${payload[Nome]}, inserita con successo` });
 });
 
 app.listen(PORT, () => {

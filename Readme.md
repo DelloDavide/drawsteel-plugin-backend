@@ -4,7 +4,7 @@ Pagina dei Database Supabase: [here](https://supabase.com/dashboard/project/cyep
 
 # TODO
 
-- Better coding
+- Add DELETES and UPDATES
 
 ## License
 
